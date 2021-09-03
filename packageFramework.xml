@@ -1,0 +1,102 @@
+<project default="make">
+
+<taskdef name="grep" classname="ise.antelope.tasks.Find"/>
+
+<target name="-make-one">
+  <echo message="Making ${ublVersion}..."/> 
+  <!--copy XSD-->
+  <echo message="Copying schemas..."/>
+  <delete dir="${dir}/frameworks/UBL/UBL-${ublVersion}/xsdrt"/>
+  <delete dir="${dir}/frameworks/UBL/UBL-${ublVersion}/document-templates"/>
+  <copy todir="${dir}/frameworks/UBL" file="LICENSE.txt"/>
+  <echo message="${version}" file="${dir}/frameworks/UBL/version.txt"/>
+  <echo message="${version}" file="${dir}/frameworks/UBL/version-${version}.txt"/>
+  <copy todir="${dir}/frameworks/UBL/UBL-${ublVersion}/xsdrt">
+    <fileset dir="UBL-${ublVersion}/xsdrt">
+      <include name="**"/>
+    </fileset>
+  </copy>
+  <!--create the instances, NVDL and Schematron-->
+  <echo message='Creating artefacts using UBL-${ublVersion}/UBL-Entities-${ublVersion}.gc ...'/>
+  <java failonerror="yes" append="true" classname="net.sf.saxon.Transform">
+    <arg value="-o:${dir}/frameworks/UBL/UBL-${ublVersion}/junk.out"/>
+    <arg value="-s:UBL-${ublVersion}/UBL-Entities-${ublVersion}.gc"/>
+    <arg value="-xsl:gc2instances.xsl"/>
+    <arg value="output-name-empty-template=document-templates/empty-BBIEs/UBL-%n-${ublVersion}-Template-Empty.xml"/>
+    <arg value="output-name-stuffed-template=document-templates/stuffed-BBIEs/UBL-%n-${ublVersion}-Template-Stuffed.xml"/>
+    <arg value="nvdl-schema-template=../xsdrt/maindoc/UBL-%n-${ublVersion}.xsd"/>
+    <arg value="output-name-nvdl=nvdl/UBL-${ublVersion}-schema-despatch.nvdl"/>
+    <arg value="output-name-schematron=sch/UBL-${ublVersion}-AdditionalDocumentConstraints.sch"/>
+    <arg value="ubl-version=${ublVersion}"/>
+    <arg value="package-version=${version}"/>
+    <arg value="dabie-ns=${dabieNS}"/>
+    <arg value="asbie-ns=${asbieNS}"/>
+    <arg value="bbie-ns=${bbieNS}"/>
+  </java>
+  <delete file="${dir}/frameworks/UBL/UBL-${ublVersion}/junk.out"/>
+
+  <echo message='Massaging framework...'/>
+  <java failonerror="yes" append="true" classname="net.sf.saxon.Transform">
+    <arg value="-s:UBL-prototype-framework.xml"/>
+    <arg value="-o:${dir}/frameworks/UBL/UBL-${ublVersion}.framework"/>
+    <arg value="gc2framework.xsl"/>
+    <arg value="gc-uri=UBL-${ublVersion}/UBL-Entities-${ublVersion}.gc"/>
+    <arg value="ubl-version=${ublVersion}"/>
+    <arg value="package-version=${version}"/>
+    <arg value="dabie-ns=${dabieNS}"/>
+  </java>
+</target>
+
+<target name="make">
+  <property name="thisdir" value="${user.dir}"/>
+  <copy todir="${dir}">
+    <fileset dir="${thisdir}">
+      <include name="**"/>
+    </fileset>
+  </copy>
+  <property name="consoleFile" location="${dir}/build.console.${version}.txt"/>
+  <record name="${consoleFile}" action="start"/>
+  <antcall target="-make-one">
+    <param name="ublVersion" value="2.1"/>
+    <param name="ublStage" value="os-UBL-2.1"/>
+    <param name="dabieNS"
+           value="urn:oasis:names:specification:ubl:schema:xsd:%n-2"/>
+    <param name="asbieNS" value=
+   "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"/>
+    <param name="bbieNS" 
+ value="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"/>
+  </antcall>
+
+  <antcall target="-make-one">
+    <param name="ublVersion" value="2.2"/>
+    <param name="ublStage" value="os-UBL-2.2"/>
+    <param name="dabieNS"
+           value="urn:oasis:names:specification:ubl:schema:xsd:%n-2"/>
+    <param name="asbieNS" value=
+   "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"/>
+    <param name="bbieNS" 
+ value="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"/>
+  </antcall>
+
+  <antcall target="-make-one">
+    <param name="ublVersion" value="2.3"/>
+    <param name="ublStage" value="os-UBL-2.3"/>
+    <param name="dabieNS"
+           value="urn:oasis:names:specification:ubl:schema:xsd:%n-2"/>
+    <param name="asbieNS" value=
+   "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"/>
+    <param name="bbieNS" 
+ value="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"/>
+  </antcall>
+
+  <!--<antcall target="-make-one">
+    <param name="ublVersion" value="2.2-Pre-award"/>
+    <param name="ublStage" value="csd02wd01pa05"/>
+    <param name="dabieNS" value="urn:X-test:UBL:Pre-award:%n"/>
+    <param name="asbieNS" value="urn:X-test:UBL:Pre-award:CommonAggregate"/>
+    <param name="bbieNS" value="urn:X-test:UBL:Pre-award:CommonBasic"/>
+  </antcall>-->
+
+</target>
+
+</project>
